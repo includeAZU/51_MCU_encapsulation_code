@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\mian.obj",
+".\Objects\lattice_screen.obj" 
+TO ".\Objects\ºı≈‰" 
+PRINT(".\Listings\ºı≈‰.m51") RAMSIZE(256) 

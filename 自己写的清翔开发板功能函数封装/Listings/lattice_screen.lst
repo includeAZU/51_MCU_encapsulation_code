@@ -1,0 +1,83 @@
+C51 COMPILER V9.54   LATTICE_SCREEN                                                        11/11/2022 12:39:32 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE LATTICE_SCREEN
+OBJECT MODULE PLACED IN .\Objects\lattice_screen.obj
+COMPILER INVOKED BY: C:\mywinapp\keil5\C51\BIN\C51.EXE lattice_screen.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRIN
+                    -T(.\Listings\lattice_screen.lst) TABS(2) OBJECT(.\Objects\lattice_screen.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          #include <INTRINS.H>
+   4          
+   5          sbit LEDARRAY_LAT = P3 ^ 6; //高电平数据并行输出
+   6          sbit LEDARRAY_CLK = P3 ^ 5; //高电平数据下移
+   7          sbit LEDARRAY_DI = P3 ^ 4;  //数据输入端
+   8          
+   9          void Send_Byte(unsigned char dat) // 74HC595
+  10          //从低到高写入
+  11          {
+  12   1        unsigned char i;
+  13   1        LEDARRAY_CLK = 0;
+  14   1        _nop_();
+  15   1        LEDARRAY_LAT = 0;
+  16   1        _nop_();
+  17   1      
+  18   1        for (i = 0; i < 8; i++)
+  19   1        {
+  20   2          LEDARRAY_DI = dat & (0x01 << i);
+  21   2      
+  22   2          LEDARRAY_CLK = 1;
+  23   2          _nop_();
+  24   2          LEDARRAY_CLK = 0;
+  25   2          _nop_();
+  26   2        }
+  27   1      }
+  28          
+  29          void lattice_screen(unsigned char Display_word[], int x)
+  30          {
+  31   1        unsigned char k;
+  32   1        int i = x;
+  33   1        int count;
+  34   1        int a;
+  35   1        while (1)
+  36   1        {
+  37   2      
+  38   2          for (count = 0; count < i; count++)
+  39   2          {
+  40   3            for (a = 0; a <= 500; a++)//更改a的置,改变两个图像显示时间间隔
+  41   3            {
+  42   4              for (k = count * 8; k <= (((count + 1) * 8) - 1); k++)
+  43   4              {
+  44   5      
+  45   5                Send_Byte(~(0x80 >> (k % 8)));
+  46   5                Send_Byte(Display_word[k]);
+  47   5                LEDARRAY_LAT = 1;
+  48   5                _nop_();
+  49   5      
+  50   5                LEDARRAY_LAT = 0;
+  51   5                _nop_();
+  52   5              }
+  53   4            }
+  54   3          }
+C51 COMPILER V9.54   LATTICE_SCREEN                                                        11/11/2022 12:39:32 PAGE 2   
+
+  55   2        }
+  56   1      }
+  57          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    205    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

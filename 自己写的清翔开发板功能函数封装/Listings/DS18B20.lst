@@ -1,0 +1,173 @@
+C51 COMPILER V9.54   DS18B20                                                               11/11/2022 12:40:48 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE DS18B20
+OBJECT MODULE PLACED IN .\Objects\DS18B20.obj
+COMPILER INVOKED BY: C:\mywinapp\keil5\C51\BIN\C51.EXE DS18B20.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Lis
+                    -tings\DS18B20.lst) TABS(2) OBJECT(.\Objects\DS18B20.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          #include "INTRINS.H"
+   3          sbit one_wire = P2 ^ 2; //数据线
+   4          
+   5          char one_wire_init(void)
+   6          {
+   7   1          char i;
+   8   1          char AckBit;
+   9   1      
+  10   1          one_wire = 0;
+  11   1      
+  12   1          i = 247;
+  13   1          while (--i)
+  14   1              ; // Delay 500us
+  15   1      
+  16   1          one_wire = 1;
+  17   1      
+  18   1          i = 32;
+  19   1          while (--i)
+  20   1              ; // Delay 70us
+  21   1      
+  22   1          AckBit = one_wire;
+  23   1      
+  24   1          i = 247;
+  25   1          while (--i)
+  26   1              ; // Delay 500us
+  27   1      
+  28   1          return AckBit;
+  29   1      }
+  30          
+  31          void one_wire_send_bit(char _data)
+  32          {
+  33   1          char i;
+  34   1          one_wire = 0;
+  35   1      
+  36   1          i = 4;
+  37   1          while (--i)
+  38   1              ; // Delay 10us
+  39   1      
+  40   1          one_wire = _data;
+  41   1      
+  42   1          i = 24;
+  43   1          while (--i)
+  44   1              ;         // Delay 50us
+  45   1          one_wire = 1; //释放总线
+  46   1      }
+  47          
+  48          unsigned char one_wire_reserve_bit(void)
+  49          { //主机将总线拉低1~15us，然后释放总线，并在拉低后15us内读取总线电平（尽量�
+             -�近15us的末尾），
+  50   1          //读取为低电平则为接收0，读取为高电平则为接收1 ，整个时间片应大于60us
+  51   1          unsigned char i;
+  52   1          unsigned char Bit;
+  53   1          one_wire = 0;
+C51 COMPILER V9.54   DS18B20                                                               11/11/2022 12:40:48 PAGE 2   
+
+  54   1          i = 2;
+  55   1          while (--i)
+  56   1              ; // Delay 5us
+  57   1          one_wire = 1;
+  58   1          i = 2;
+  59   1          while (--i)
+  60   1              ; // Delay 5us
+  61   1          Bit = one_wire;
+  62   1          i = 24;
+  63   1          while (--i)
+  64   1              ; // Delay 50us
+  65   1          return Bit;
+  66   1      }
+  67          
+  68          void DS18B20_send_byte(char _data)
+  69          {
+  70   1          char i;
+  71   1          for (i = 0; i < 8; i++)
+  72   1          {
+  73   2              one_wire_send_bit((_data & (0x01 << i)));
+  74   2          }
+  75   1      }
+  76          
+  77          char DS18B20_reserve_byte(void)
+  78          {
+  79   1          char i;
+  80   1          char _data = 0x00;
+  81   1          for (i = 0; i < 8; i++)
+  82   1          {
+  83   2              if (one_wire_reserve_bit())
+  84   2              {
+  85   3                  _data |= (0x01 << i);
+  86   3              }
+  87   2          }
+  88   1          return _data;
+  89   1      }
+  90          void DS18B20_change_temperature(void ) //温度转换
+  91          {
+  92   1          one_wire_init();
+  93   1          DS18B20_send_byte(0xcc);
+  94   1          DS18B20_send_byte(0x44);
+  95   1      }
+  96          float DS18B20_show_temperature(void) //显示温度
+  97          {
+  98   1          unsigned char hight, low;
+  99   1          int temperature;
+ 100   1          float T;
+ 101   1          one_wire_init();
+ 102   1          DS18B20_send_byte(0xcc);
+ 103   1          DS18B20_send_byte(0xbe);
+ 104   1          low = DS18B20_reserve_byte();
+ 105   1          hight = DS18B20_reserve_byte(); //转化为10进制
+ 106   1          temperature = (hight << 8) | low;
+ 107   1          T = temperature / 16.0;
+ 108   1          return T;
+ 109   1      }
+ 110          // #include "LCD1602.h"
+ 111          // void Delayms(int num) //@11.0592MHz
+ 112          // {
+ 113          //     unsigned char i, j;
+ 114          //     while (num--)
+ 115          //     {
+C51 COMPILER V9.54   DS18B20                                                               11/11/2022 12:40:48 PAGE 3   
+
+ 116          //         _nop_();
+ 117          //         _nop_();
+ 118          //         _nop_();
+ 119          //         i = 11;
+ 120          //         j = 190;
+ 121          //         do
+ 122          //         {
+ 123          //             while (--j)
+ 124          //                 ;
+ 125          //         } while (--i);
+ 126          //     }
+ 127          // }
+ 128          
+ 129          // float T;
+ 130          
+ 131          // void main()
+ 132          // {
+ 133          //     LCD_Init();
+ 134          //     LCD_ShowString(1,3,"temperature");
+ 135          //     while (1)
+ 136          //     {
+ 137          //         DS18B20_change_temperature();
+ 138          //         Delayms(100);
+ 139          //         T = DS18B20_show_temperature();
+ 140          //         LCD_ShowNum(2, 6, T, 2); //显示温度整数部分
+ 141          //         LCD_ShowChar(2, 8, '.');
+ 142          //         LCD_ShowNum(2, 9, (unsigned long)(T * 100) % 100, 2);
+ 143          //     }
+ 144          // }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    176    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

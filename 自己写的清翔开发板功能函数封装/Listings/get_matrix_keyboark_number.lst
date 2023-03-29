@@ -1,0 +1,80 @@
+C51 COMPILER V9.54   GET_MATRIX_KEYBOARK_NUMBER                                            11/11/2022 14:33:46 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE GET_MATRIX_KEYBOARK_NUMBER
+OBJECT MODULE PLACED IN .\Objects\get_matrix_keyboark_number.obj
+COMPILER INVOKED BY: C:\mywinapp\keil5\C51\BIN\C51.EXE get_matrix_keyboark_number.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJEC
+                    -TEXTEND PRINT(.\Listings\get_matrix_keyboark_number.lst) TABS(2) OBJECT(.\Objects\get_matrix_keyboark_number.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          #include <INTRINS.H>
+   3          
+   4          void Delay20ms()    //@11.0592MHz
+   5          {
+   6   1        unsigned char i, j;
+   7   1      
+   8   1        i = 216;
+   9   1        j = 37;
+  10   1        do
+  11   1        {
+  12   2          while (--j);
+  13   2        } while (--i);
+  14   1      }
+  15          
+  16          
+  17          
+  18          
+  19          
+  20          
+  21          int get_matrix_keyboark_number()
+  22          {
+  23   1      int number=0;
+  24   1      
+  25   1      P3=0xFF;
+  26   1      P3_4=0;
+  27   1      if (P3_0==0){Delay20ms();while (P3_0==0);Delay20ms();number=1;}
+  28   1      if (P3_1==0){Delay20ms();while (P3_1==0);Delay20ms();number=5;}
+  29   1      if (P3_2==0){Delay20ms();while (P3_2==0);Delay20ms();number=9;}
+  30   1      if (P3_3==0){Delay20ms();while (P3_3==0);Delay20ms();number=13;}
+  31   1      
+  32   1      P3=0xFF;
+  33   1      P3_5=0;
+  34   1      if (P3_0==0){Delay20ms();while (P3_0==0);Delay20ms();number=2;}
+  35   1      if (P3_1==0){Delay20ms();while (P3_1==0);Delay20ms();number=6;}
+  36   1      if (P3_2==0){Delay20ms();while (P3_2==0);Delay20ms();number=10;}
+  37   1      if (P3_3==0){Delay20ms();while (P3_3==0);Delay20ms();number=14;}
+  38   1      
+  39   1      P3=0xFF;
+  40   1      P3_6=0;
+  41   1      if (P3_0==0){Delay20ms();while (P3_0==0);Delay20ms();number=3;}
+  42   1      if (P3_1==0){Delay20ms();while (P3_1==0);Delay20ms();number=7;}
+  43   1      if (P3_2==0){Delay20ms();while (P3_2==0);Delay20ms();number=11;}
+  44   1      if (P3_3==0){Delay20ms();while (P3_3==0);Delay20ms();number=15;}
+  45   1      
+  46   1      P3=0xFF;
+  47   1      P3_7=0;
+  48   1      if (P3_0==0){Delay20ms();while (P3_0==0);Delay20ms();number=4;}
+  49   1      if (P3_1==0){Delay20ms();while (P3_1==0);Delay20ms();number=8;}
+  50   1      if (P3_2==0){Delay20ms();while (P3_2==0);Delay20ms();number=12;}
+  51   1      if (P3_3==0){Delay20ms();while (P3_3==0);Delay20ms();number=16;}
+  52   1      
+  53   1      return number;
+  54   1      }
+C51 COMPILER V9.54   GET_MATRIX_KEYBOARK_NUMBER                                            11/11/2022 14:33:46 PAGE 2   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    293    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

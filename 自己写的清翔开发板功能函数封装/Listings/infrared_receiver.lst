@@ -1,0 +1,154 @@
+C51 COMPILER V9.54   INFRARED_RECEIVER                                                     11/14/2022 10:57:57 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE INFRARED_RECEIVER
+OBJECT MODULE PLACED IN .\Objects\infrared_receiver.obj
+COMPILER INVOKED BY: C:\mywinapp\keil5\C51\BIN\C51.EXE infrared_receiver.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND P
+                    -RINT(.\Listings\infrared_receiver.lst) TABS(2) OBJECT(.\Objects\infrared_receiver.obj)
+
+line level    source
+
+   1          #include "REGX52.H"
+   2          #include "LCD1602.h"
+   3          void timer0_init() //设置定时器
+   4          {
+   5   1          TMOD &= 0xF0; //设置定时器模式
+   6   1          TMOD |= 0x01; //设置定时器模式
+   7   1          TL0 = 0;      //设置定时初值
+   8   1          TH0 = 0;      //设置定时初值
+   9   1          TF0 = 0;      //清除TF0标志
+  10   1          TR0 = 0;      //定时器0不计时
+  11   1      }
+  12          void timer0_set_counter(int count) //设置定时器时间
+  13          {
+  14   1          TH0 = count / 256;
+  15   1          TL0 = count % 256;
+  16   1      }
+  17          unsigned int timer0_get_counter() //获取定时器时间
+  18          {
+  19   1      
+  20   1          return ((TH0 << 8) | TL0);
+  21   1      }
+  22          void timer0_run(char ifstate) //是否启动定时器
+  23          {
+  24   1      
+  25   1          TR0 = ifstate;
+  26   1      }
+  27          
+  28          void interrupt0_init() //中断设置,下降沿触发
+  29          {
+  30   1          IT0 = 1;
+  31   1          IE0 = 0;
+  32   1          EX0 = 1;
+  33   1          EA = 1;
+  34   1          PX0 = 1;
+  35   1      }
+  36          int ir_time;
+  37          char ir_state; // ir 状态
+  38          char ir_data[4];
+  39          char ir_pdata;
+  40          char ir_data_flag; //接收数据位
+  41          char ir_repeat_flag;
+  42          char ir_address;
+  43          char ir_comnand;
+  44          
+  45          void itr0() interrupt 0
+  46          {
+  47   1          if (ir_state == 0) //空闲状态//默认为0
+  48   1          {
+  49   2              timer0_set_counter(0);
+  50   2              timer0_run(1); //开始计时
+  51   2              ir_state = 1;  //准备接收数据
+  52   2          }
+  53   1          else if (ir_state == 1) //开始接收数据
+  54   1          {
+C51 COMPILER V9.54   INFRARED_RECEIVER                                                     11/14/2022 10:57:57 PAGE 2   
+
+  55   2              ir_time = timer0_get_counter(); //获取上一次中断到此次中断的时间
+  56   2              timer0_set_counter(0);
+  57   2      
+  58   2              if (ir_time > 12442 - 500 && ir_time < 12442 + 500)
+  59   2              {
+  60   3                  ir_state = 2; //是开始信号,接收数据
+  61   3              }
+  62   2              else if (ir_time > 10368 - 500 && ir_time < 10368 + 500)
+  63   2              {
+  64   3                  ir_repeat_flag = 1; //重发标志
+  65   3                  timer0_run(0);
+  66   3                  ir_state = 0;
+  67   3              }
+  68   2              else //接收出错
+  69   2              {
+  70   3                  ir_state = 1; //置状态为1
+  71   3              }
+  72   2          }
+  73   1      
+  74   1          else if (ir_state == 2)
+  75   1          {
+  76   2              ir_time = timer0_get_counter();
+  77   2              timer0_set_counter(0);
+  78   2              if (ir_time > 1032 - 500 && ir_time < 1032 + 500)
+  79   2              { // 0
+  80   3                  ir_data[ir_pdata / 8] &= ~(0x01 << (ir_pdata % 8));
+  81   3                  // 0101  0110
+  82   3                  // 0000  0001
+  83   3                  // 1111  1110
+  84   3                  // ir_data[ir_pdata / 8] &= ~(0x01 << (ir_pdata % 8));
+  85   3                  ir_pdata++;
+  86   3              }
+  87   2              else if (ir_time > 2074 - 500 && ir_time < 2074 + 500)
+  88   2              {
+  89   3                  // 1
+  90   3                  //低位在前,高位在后
+  91   3                  ir_data[ir_pdata / 8] &= (0x01 << (ir_pdata % 8));
+  92   3                  ir_pdata++;
+  93   3              }
+  94   2              else //接收出错
+  95   2              {
+  96   3                  ir_pdata = 0; //数据位置指针清0
+  97   3                  ir_state = 1; //置状态为1
+  98   3              }
+  99   2      
+ 100   2              if (ir_pdata >= 32)
+ 101   2              {
+ 102   3                  ir_pdata = 0;
+ 103   3                  if (ir_data[0] == ~ir_data[1] && ir_data[2] == ~ir_data[3])
+ 104   3                  { //正反校验
+ 105   4                      ir_address = ir_data[0];
+ 106   4      
+ 107   4                      ir_comnand = ir_data[2];
+ 108   4                      ir_data_flag = 1; //接收数据成功
+ 109   4                  }
+ 110   3                  timer0_run(0);
+ 111   3                  ir_state = 0;
+ 112   3              }
+ 113   2          }
+ 114   1      }
+ 115          
+ 116          char ret_ir_comnand(void)
+C51 COMPILER V9.54   INFRARED_RECEIVER                                                     11/14/2022 10:57:57 PAGE 3   
+
+ 117          {
+ 118   1          return ir_comnand;
+ 119   1      }
+ 120          
+ 121          char infrared_receiver(void)
+ 122          {
+ 123   1          timer0_init();
+ 124   1          interrupt0_init();
+ 125   1          return ret_ir_comnand();
+ 126   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    433    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
